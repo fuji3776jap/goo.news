@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Scraper</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #00FF00;
+      font-family: 'メイリオ', sans-serif;
+    }
+    a {
+      color: #B0B0B0;
+    }
+    .progress-bar {
+      width: 100%;
+      background-color: #ddd;
+    }
+    .progress-bar-fill {
+      height: 24px;
+      width: 0;
+      background-color: #00FF00;
+      text-align: center;
+      line-height: 24px;
+      color: black;
+    }
+    .debug {
+      display: none;
+    }
+    .scroll-button {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: rgba(0, 0, 0, 0.5);
+      color: #00FF00;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+      border-radius: 50%;
+    }
+    .top-button {
+      bottom: 60px;
+    }
+    .bottom-button {
+      bottom: 20px;
+    }
+    .article {
+      margin-bottom: 20px;
+    }
+    .article img {
+      max-width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h1>Web Scraper</h1>
+  <button onclick="toggleDebug()">Toggle Debug</button>
+  <button class="scroll-button top-button" onclick="scrollToTop()">⬆️</button>
+  <button class="scroll-button bottom-button" onclick="scrollToBottom()">⬇️</button>
+  <button onclick="readAllArticles()">全記事を読み上げる</button>
+  <div class="progress-bar">
+    <div class="progress-bar-fill" id="progress-bar-fill">0%</div>
+  </div>
+  <div id="debug" class="debug"></div>
+  <div id="results"></div>
+
+  <script>
+    function toggleDebug() {
+      const debug = document.getElementById('debug');
+      debug.style.display = debug.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function scrollToBottom() {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+
+    async function fetchData() {
+      const results = [];
+      for (let page = 1; page <= 1; page++) {
+        const url = `https://news.goo.ne.jp/latest?page=${page}`;
+        const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+        const data = await response.json();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(data.contents, 'text/html');
+
+        doc.querySelectorAll('.gn-news-list.responsive-margin-bottom a').forEach(element => {
+          const link = element.getAttribute('href');
+          results.push(`https://news.goo.ne.jp${link}`);
+        });
+      }
+
+      const detailedResults = [];
+      for (let result of results) {
+        const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(result)}`);
+        const data = await response.json();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(data.contents, 'text/html');
+
+        const title = doc.querySelector('.article-title.margin-bottom15')?.textContent || '';
+        let image = doc.querySelector('.article-thumbs img')?.getAttribute('src') || '';
+        const date = doc.querySelector('.article-date.clearfix')?.textContent || '';
+        const content = doc.querySelector('.clearfix.article-text.cXenseParse')?.textContent || '';
+
+        // 画像URLの置換
+        if (image) {
+          image = image.replace('https://news.goo.ne.jphttps', 'https:');
+        }
+
+        detailedResults.push({
+          title,
+          image: image ? image : null,
+          date,
+          content
+        });
+      }
+
+      displayResults(detailedResults);
+    }
+
+    function displayResults(data) {
+      const resultsDiv = document.getElementById('results');
+      const progressBarFill = document.getElementById('progress-bar-fill');
+      const debugDiv = document.getElementById('debug');
+
+      data.forEach((item, index) => {
+        const articleDiv = document.createElement('div');
+        articleDiv.classList.add('article');
+        articleDiv.innerHTML = `
+          <h2>${item.title}</h2>
+          <p>${item.date}</p>
+          <button onclick="copyText('${item.content}')">コピー</button>
+          <button onclick="toggleReadArticle('${item.content}', this)">読み上げ</button>
+          <input type="range" min="0.5" max="2" value="1.4" step="0.1" onchange="changeSpeed(this.value)">
+          ${item.image ? `<img src="${item.image}" alt="Image">` : ''}
+          <p>${item.content}</p>
+        `;
+        resultsDiv.appendChild(articleDiv);
+
+        // Update progress bar
+        const progress = ((index + 1) / data.length) * 100;
+        progressBarFill.style.width = `${progress}%`;
+        progressBarFill.textContent = `${Math.round(progress)}%`;
+
+        // Debug information
+        debugDiv.innerHTML += `<p>Processed: ${item.title}</p>`;
+      });
+
+      // Hide progress bar after completion
+      progressBarFill.style.display = 'none';
+    }
+
+    function copyText(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert('コピーしました');
+      });
+    }
+
+    let currentUtterance = null;
+
+    function toggleReadArticle(text, button) {
+      if (currentUtterance && speechSynthesis.speaking) {
+        speechSynthesis.cancel();
+        button.textContent = '読み上げ';
+      } else {
+        currentUtterance = new SpeechSynthesisUtterance(text);
+        currentUtterance.rate = 1.4;
+        speechSynthesis.speak(currentUtterance);
+        button.textContent = '一時停止';
+      }
+    }
+
+    function changeSpeed(speed) {
+      if (currentUtterance) {
+        currentUtterance.rate = speed;
+        speechSynthesis.cancel();
+        speechSynthesis.speak(currentUtterance);
+      }
+    }
+
+    function readAllArticles() {
+      const articles = document.querySelectorAll('.article p');
+      let fullText = '';
+      articles.forEach(article => {
+        fullText += article.textContent + ' ';
+      });
+      toggleReadArticle(fullText, document.querySelector('button[onclick="readAllArticles()"]'));
+    }
+
+    window.onload = fetchData;
+  </script>
+</body>
+</html>
