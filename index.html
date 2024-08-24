@@ -107,7 +107,7 @@
 
     async function fetchData() {
       const results = [];
-      for (let page = 1; page <= 5; page++) {
+      for (let page = 1; page <= 10; page++) {
         const url = `https://news.goo.ne.jp/latest?page=${page}`;
         let success = false;
         for (let attempt = 0; attempt < 3; attempt++) {
