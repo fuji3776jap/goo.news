@@ -6,9 +6,9 @@
   <title>Web Scraper</title>
   <style>
     body {
-      background-color: #121212;
-      color: #00FF00;
-      font-family: 'メイリオ', sans-serif;
+      background-color: #0f0e17;
+      color: #a7a9be;
+      font-family: 'ヒラギノ角ゴシック', sans-serif;
     }
     a {
       color: #B0B0B0;
@@ -20,55 +20,126 @@
     .progress-bar-fill {
       height: 24px;
       width: 0;
-      background-color: #00FF00;
+      background-color: #ff8906;
       text-align: center;
       line-height: 24px;
-      color: black;
+      color: #fffffe;
     }
     .debug {
       display: none;
     }
     .scroll-button {
       position: fixed;
-      bottom: 20px;
       right: 20px;
-      background-color: rgba(128, 128, 128, 0.5);
-      color: #00FF00;
+      background-color: #f582ae;
+      color: #001858;
       border: none;
       padding: 10px;
       cursor: pointer;
       border-radius: 50%;
+      margin-bottom: 10px;
     }
     .top-button {
-      bottom: 60px;
+      bottom: 80px;
     }
     .bottom-button {
       bottom: 20px;
     }
+    .scroll-down-button {
+      bottom: 50px;
+    }
     .article {
       margin-bottom: 20px;
+      border-bottom: 1px solid #a7a9be;
+      padding-bottom: 20px;
     }
     .article img {
       max-width: 100%;
+      display: block;
+      margin: 10px auto;
     }
     .toggle-button {
-      background-color: rgba(128, 128, 128, 0.5);
-      color: #00FF00;
+      background-color: #ff8906;
+      color: #fffffe;
       border: none;
       padding: 10px;
       cursor: pointer;
       margin: 10px;
     }
+    .hamburger-menu {
+      position: fixed;
+      top: 0;
+      right: 0;
+      background-color: #ff8906;
+      color: #fffffe;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+      z-index: 1000;
+    }
+    .menu-content {
+      display: none;
+      position: fixed;
+      top: 50px;
+      right: 0;
+      background-color: #ff8906;
+      color: #fffffe;
+      border: none;
+      padding: 10px;
+      z-index: 1000;
+      animation: slide-in 0.3s forwards;
+    }
+    .menu-content div {
+      margin: 5px 0;
+      cursor: pointer;
+    }
+    .menu-content div:not(:last-child) {
+      border-bottom: 1px solid #fffffe;
+    }
+    @keyframes slide-in {
+      from {
+        right: -200px;
+      }
+      to {
+        right: 0;
+      }
+    }
+    @keyframes slide-out {
+      from {
+        right: 0;
+      }
+      to {
+        right: -200px;
+      }
+    }
+    #timer {
+      font-size: 16px;
+      text-align: center;
+    }
+    h1 {
+      text-align: center;
+    }
+    #article-count {
+      font-size: 16px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
   <h1>Web Scraper</h1>
-  <button onclick="toggleDebug()">Toggle Debug</button>
-  <button class="scroll-button top-button" onclick="scrollToTop()">⬆️</button>
-  <button class="scroll-button bottom-button" onclick="scrollToBottom()">⬇️</button>
-  <button onclick="readAllArticles()">全記事を読み上げる</button>
-  <button class="toggle-button" onclick="toggleDarkMode()">ダークモード/ライトモード</button>
-  <button class="toggle-button" onclick="toggleImages()">画像表示/非表示</button>
+  <div id="timer">00:00:00</div>
+  <div id="article-count">記事数: 0</div>
+  <button class="hamburger-menu" onclick="toggleMenu()">☰</button>
+  <div class="menu-content" id="menu-content">
+    <div onclick="toggleDarkMode()">ダークモード/ライトモード</div>
+    <div onclick="toggleImages()">画像表示/非表示</div>
+    <div onclick="toggleDebug()">デバック</div>
+  </div>
+  <button class="scroll-button top-button" onclick="scrollToTop()">↑</button>
+  <button class="scroll-button bottom-button" onclick="scrollToBottom()">↓</button>
+  <button class="scroll-button scroll-down-button" onmousedown="startAutoScroll()" onmouseup="stopAutoScroll()">▽</button>
+  <button class="toggle-button" onclick="readAllArticles()">全記事を読み上げる</button>
+  <input type="range" min="0.5" max="2" value="1.4" step="0.1" onchange="changeAllSpeed(this.value)">
   <div class="progress-bar">
     <div class="progress-bar-fill" id="progress-bar-fill">0%</div>
   </div>
@@ -78,6 +149,13 @@
   <script>
     let darkMode = true;
     let showImages = true;
+    let timerInterval;
+    let currentUtterance = null;
+    let allUtterance = null;
+    let allText = '';
+    let allIndex = 0;
+    let autoScrollInterval;
+    let articleCount = 0;
 
     function toggleDebug() {
       const debug = document.getElementById('debug');
@@ -92,10 +170,31 @@
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }
 
+    function startAutoScroll() {
+      autoScrollInterval = setInterval(() => {
+        window.scrollBy(0, 1);
+      }, 10);
+    }
+
+    function stopAutoScroll() {
+      clearInterval(autoScrollInterval);
+    }
+
     function toggleDarkMode() {
       darkMode = !darkMode;
-      document.body.style.backgroundColor = darkMode ? '#121212' : '#FFFFFF';
-      document.body.style.color = darkMode ? '#00FF00' : '#000000';
+      document.body.style.backgroundColor = darkMode ? '#0f0e17' : '#fef6e4';
+      document.body.style.color = darkMode ? '#a7a9be' : '#172c66';
+      document.querySelectorAll('.article h2').forEach(h2 => {
+        h2.style.color = darkMode ? '#fffffe' : '#001858';
+      });
+      document.querySelectorAll('.toggle-button, .scroll-button').forEach(button => {
+        button.style.backgroundColor = darkMode ? '#ff8906' : '#f582ae';
+        button.style.color = darkMode ? '#fffffe' : '#001858';
+      });
+      document.querySelector('.hamburger-menu').style.backgroundColor = darkMode ? '#ff8906' : '#f582ae';
+      document.querySelector('.hamburger-menu').style.color = darkMode ? '#fffffe' : '#001858';
+      document.querySelector('.menu-content').style.backgroundColor = darkMode ? '#ff8906' : '#f582ae';
+      document.querySelector('.menu-content').style.color = darkMode ? '#fffffe' : '#001858';
     }
 
     function toggleImages() {
@@ -105,9 +204,22 @@
       });
     }
 
+    function toggleMenu() {
+      const menuContent = document.getElementById('menu-content');
+      if (menuContent.style.display === 'none' || menuContent.style.display === '') {
+        menuContent.style.display = 'block';
+        menuContent.style.animation = 'slide-in 0.3s forwards';
+      } else {
+        menuContent.style.animation = 'slide-out 0.3s forwards';
+        setTimeout(() => {
+          menuContent.style.display = 'none';
+        }, 300);
+      }
+    }
+
     async function fetchData() {
       const results = [];
-      for (let page = 1; page <= 10; page++) {
+      for (let page = 1; page <= 1; page++) {
         const url = `https://news.goo.ne.jp/latest?page=${page}`;
         let success = false;
         for (let attempt = 0; attempt < 3; attempt++) {
@@ -168,14 +280,15 @@
       const resultsDiv = document.getElementById('results');
       const progressBarFill = document.getElementById('progress-bar-fill');
       const debugDiv = document.getElementById('debug');
+      const articleCountDiv = document.getElementById('article-count');
 
       const articleDiv = document.createElement('div');
       articleDiv.classList.add('article');
       articleDiv.innerHTML = `
         <h2>${item.title}</h2>
         <p>${item.date}</p>
-        <button onclick="copyText('${item.content}')">コピー</button>
-        <button onclick="toggleReadArticle('${item.content}', this)">読み上げ</button>
+        <button onclick="copyText('${item.title}', '${item.date}', '${item.content}')">コピー</button>
+        <button onclick="toggleReadArticle('${item.title}', '${item.date}', '${item.content}', this)">読み上げ</button>
         <input type="range" min="0.5" max="2" value="1.4" step="0.1" onchange="changeSpeed(this.value)">
         ${item.image ? `<img src="${item.image}" alt="Image">` : ''}
         <p>${item.content}</p>
@@ -187,6 +300,10 @@
       progressBarFill.style.width = `${progress}%`;
       progressBarFill.textContent = `${Math.round(progress)}%`;
 
+      // Update article count
+      articleCount++;
+      articleCountDiv.textContent = `記事数: ${articleCount}`;
+
       // Debug information
       debugDiv.innerHTML += `<p>Processed: ${item.title}</p>`;
 
@@ -196,18 +313,21 @@
       }
     }
 
-    function copyText(text) {
+    function copyText(title, date, content) {
+      const text = `${title}\n${date}\n${content}`;
       navigator.clipboard.writeText(text).then(() => {
         alert('コピーしました');
       });
     }
 
-    let currentUtterance = null;
-
-    function toggleReadArticle(text, button) {
+    function toggleReadArticle(title, date, content, button) {
+      const text = `${title}\n${date}\n${content}`;
       if (currentUtterance && speechSynthesis.speaking) {
-        speechSynthesis.cancel();
-        button.textContent = '読み上げ';
+        speechSynthesis.pause();
+        button.textContent = '再開';
+      } else if (currentUtterance && speechSynthesis.paused) {
+        speechSynthesis.resume();
+        button.textContent = '一時停止';
       } else {
         currentUtterance = new SpeechSynthesisUtterance(text);
         currentUtterance.rate = 1.4;
@@ -225,15 +345,65 @@
     }
 
     function readAllArticles() {
-      const articles = document.querySelectorAll('.article p');
-      let fullText = '';
+      const articles = document.querySelectorAll('.article');
+      allText = '';
       articles.forEach(article => {
-        fullText += article.textContent + ' ';
+        const title = article.querySelector('h2').textContent;
+        const date = article.querySelector('p').textContent;
+        const content = article.querySelector('p:last-of-type').textContent;
+        allText += `${title}\n${date}\n${content}\n`;
       });
-      toggleReadArticle(fullText, document.querySelector('button[onclick="readAllArticles()"]'));
+      toggleReadAllArticles();
     }
 
-    window.onload = fetchData;
+    function toggleReadAllArticles() {
+      if (allUtterance && speechSynthesis.speaking) {
+        speechSynthesis.pause();
+        document.querySelector('button[onclick="readAllArticles()"]').textContent = '再開';
+      } else if (allUtterance && speechSynthesis.paused) {
+        speechSynthesis.resume();
+        document.querySelector('button[onclick="readAllArticles()"]').textContent = '一時停止';
+      } else {
+        allUtterance = new SpeechSynthesisUtterance(allText);
+        allUtterance.rate = 1.4;
+        speechSynthesis.speak(allUtterance);
+        document.querySelector('button[onclick="readAllArticles()"]').textContent = '一時停止';
+      }
+    }
+
+    function changeAllSpeed(speed) {
+      if (allUtterance) {
+        allUtterance.rate = speed;
+        speechSynthesis.cancel();
+        speechSynthesis.speak(allUtterance);
+      }
+    }
+
+    function startTimer() {
+      const timer = document.getElementById('timer');
+      let seconds = 0;
+      let minutes = 0;
+      let hours = 0;
+
+      timerInterval = setInterval(() => {
+        seconds++;
+        if (seconds === 60) {
+          seconds = 0;
+          minutes++;
+        }
+        if (minutes === 60) {
+          minutes = 0;
+          hours++;
+        }
+
+        timer.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      }, 1000);
+    }
+
+    window.onload = () => {
+      fetchData();
+      startTimer();
+    };
   </script>
 </body>
 </html>
