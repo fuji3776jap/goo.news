@@ -13,40 +13,33 @@
     a {
       color: #B0B0B0;
     }
-    .progress-bar {
-      width: 100%;
-      background-color: #ddd;
-    }
-    .progress-bar-fill {
-      height: 24px;
-      width: 0;
-      background-color: #ff8906;
-      text-align: center;
-      line-height: 24px;
-      color: #fffffe;
-    }
     .debug {
       display: none;
     }
     .scroll-button {
       position: fixed;
       right: 20px;
-      background-color: #f582ae;
-      color: #001858;
+      background-color: rgba(255, 137, 6, 0.5);
+      color: #fffffe;
       border: none;
-      padding: 10px;
+      width: 50px;
+      height: 50px;
+      font-size: 40px;
+      font-weight: bold;
       cursor: pointer;
       border-radius: 50%;
       margin-bottom: 10px;
+      text-align: center;
+      line-height: 40px;
     }
     .top-button {
-      bottom: 80px;
+      bottom: 140px;
     }
     .bottom-button {
       bottom: 20px;
     }
     .scroll-down-button {
-      bottom: 50px;
+      bottom: 80px;
     }
     .article {
       margin-bottom: 20px;
@@ -73,14 +66,19 @@
       background-color: #ff8906;
       color: #fffffe;
       border: none;
-      padding: 10px;
+      width: 60px;
+      height: 60px;
+      font-size: 50px;
+      font-weight: bold;
       cursor: pointer;
       z-index: 1000;
+      text-align: center;
+      line-height: 60px;
     }
     .menu-content {
       display: none;
       position: fixed;
-      top: 50px;
+      top: 60px;
       right: 0;
       background-color: #ff8906;
       color: #fffffe;
@@ -118,10 +116,12 @@
     }
     h1 {
       text-align: center;
+      margin-bottom: 0;
     }
     #article-count {
       font-size: 16px;
       text-align: center;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -140,9 +140,6 @@
   <button class="scroll-button scroll-down-button" onmousedown="startAutoScroll()" onmouseup="stopAutoScroll()">▽</button>
   <button class="toggle-button" onclick="readAllArticles()">全記事を読み上げる</button>
   <input type="range" min="0.5" max="2" value="1.4" step="0.1" onchange="changeAllSpeed(this.value)">
-  <div class="progress-bar">
-    <div class="progress-bar-fill" id="progress-bar-fill">0%</div>
-  </div>
   <div id="debug" class="debug"></div>
   <div id="results"></div>
 
@@ -188,7 +185,7 @@
         h2.style.color = darkMode ? '#fffffe' : '#001858';
       });
       document.querySelectorAll('.toggle-button, .scroll-button').forEach(button => {
-        button.style.backgroundColor = darkMode ? '#ff8906' : '#f582ae';
+        button.style.backgroundColor = darkMode ? 'rgba(255, 137, 6, 0.5)' : 'rgba(245, 130, 174, 0.5)';
         button.style.color = darkMode ? '#fffffe' : '#001858';
       });
       document.querySelector('.hamburger-menu').style.backgroundColor = darkMode ? '#ff8906' : '#f582ae';
@@ -219,7 +216,7 @@
 
     async function fetchData() {
       const results = [];
-      for (let page = 1; page <= 1; page++) {
+      for (let page = 1; page <= 5; page++) {
         const url = `https://news.goo.ne.jp/latest?page=${page}`;
         let success = false;
         for (let attempt = 0; attempt < 3; attempt++) {
@@ -278,7 +275,6 @@
 
     function displayResult(item) {
       const resultsDiv = document.getElementById('results');
-      const progressBarFill = document.getElementById('progress-bar-fill');
       const debugDiv = document.getElementById('debug');
       const articleCountDiv = document.getElementById('article-count');
 
@@ -288,17 +284,11 @@
         <h2>${item.title}</h2>
         <p>${item.date}</p>
         <button onclick="copyText('${item.title}', '${item.date}', '${item.content}')">コピー</button>
-        <button onclick="toggleReadArticle('${item.title}', '${item.date}', '${item.content}', this)">読み上げ</button>
-        <input type="range" min="0.5" max="2" value="1.4" step="0.1" onchange="changeSpeed(this.value)">
+        <button onclick="readArticle('${item.title}', '${item.date}', '${item.content}', this)">読み上げ</button>
         ${item.image ? `<img src="${item.image}" alt="Image">` : ''}
         <p>${item.content}</p>
       `;
       resultsDiv.appendChild(articleDiv);
-
-      // Update progress bar
-      const progress = ((resultsDiv.children.length) / 100) * 100;
-      progressBarFill.style.width = `${progress}%`;
-      progressBarFill.textContent = `${Math.round(progress)}%`;
 
       // Update article count
       articleCount++;
@@ -306,11 +296,6 @@
 
       // Debug information
       debugDiv.innerHTML += `<p>Processed: ${item.title}</p>`;
-
-      // Hide progress bar after completion
-      if (progress >= 100) {
-        progressBarFill.style.display = 'none';
-      }
     }
 
     function copyText(title, date, content) {
@@ -320,7 +305,7 @@
       });
     }
 
-    function toggleReadArticle(title, date, content, button) {
+    function readArticle(title, date, content, button) {
       const text = `${title}\n${date}\n${content}`;
       if (currentUtterance && speechSynthesis.speaking) {
         speechSynthesis.pause();
