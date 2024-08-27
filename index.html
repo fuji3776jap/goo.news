@@ -3,160 +3,302 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Web Scraper</title>
+  <title>goo News</title>
   <style>
     body {
+      font-family: 'Hiragino Kaku Gothic Pro', 'ヒラギノ角ゴ Pro W3', 'Hiragino Sans', sans-serif;
       background-color: #0f0e17;
       color: #a7a9be;
-      font-family: 'ヒラギノ角ゴシック', sans-serif;
     }
-    a {
-      color: #B0B0B0;
+    .dark-mode {
+      background-color: #0f0e17;
+      color: #a7a9be;
     }
-    .debug {
-      display: none;
+    .light-mode {
+      background-color: #fef6e4;
+      color: #172c66;
     }
-    .scroll-button {
-      position: fixed;
-      right: 20px;
-      background-color: rgba(255, 137, 6, 0.5);
-      color: #fffffe;
-      border: none;
-      width: 40px;
-      height: 40px;
-      font-size: 30px;
-      font-weight: bold;
-      cursor: pointer;
-      border-radius: 50%;
-      margin-bottom: 10px;
+    .title {
       text-align: center;
-      line-height: 40px;
-    }
-    .top-button {
-      bottom: 140px;
-    }
-    .bottom-button {
-      bottom: 20px;
-    }
-    .scroll-down-button {
-      bottom: 80px;
+      color: #fffffe;
     }
     .article {
-      margin-bottom: 20px;
       border-bottom: 1px solid #a7a9be;
-      padding-bottom: 20px;
+      padding: 10px;
+      text-align: center;
     }
     .article img {
       max-width: 100%;
-      display: block;
-      margin: 10px auto;
+    }
+    .button {
+      background-color: #ff8906;
+      color: #fffffe;
+      border: none;
+      padding: 5px;
+      cursor: pointer;
+      font-size: 10px;
+      height: 20px;
+    }
+    .button:hover {
+      background-color: #ff6700;
+    }
+    .scroll-button {
+      position: fixed;
+      right: 10px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: rgba(255, 137, 6, 0.5);
+      color: #fffffe;
+      font-size: 30px;
+      text-align: center;
+      line-height: 40px;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+    .scroll-button:hover {
+      background-color: rgba(255, 137, 6, 0.7);
+    }
+    #scroll-top {
+      bottom: 170px;
+    }
+    #auto-scroll {
+      bottom: 120px;
+    }
+    #scroll-bottom {
+      bottom: 70px;
     }
     .toggle-button {
       background-color: #ff8906;
       color: #fffffe;
       border: none;
-      padding: 10px;
+      padding: 5px;
       cursor: pointer;
-      margin: 10px;
+      font-size: 10px;
+      height: 20px;
     }
-    .hamburger-menu {
-      position: fixed;
-      top: 0;
-      right: 0;
-      background-color: #ff8906;
-      color: #fffffe;
-      border: none;
-      width: 50px;
-      height: 50px;
-      font-size: 50px;
-      font-weight: bold;
-      cursor: pointer;
-      z-index: 1000;
-      text-align: center;
-      line-height: 60px;
+    .toggle-button:hover {
+      background-color: #ff6700;
     }
-    .menu-content {
-      display: none;
-      position: fixed;
-      top: 60px;
-      right: 0;
-      background-color: #ff8906;
-      color: #fffffe;
-      border: none;
-      padding: 10px;
-      z-index: 1000;
-      animation: slide-in 0.3s forwards;
-    }
-    .menu-content div {
-      margin: 5px 0;
-      cursor: pointer;
-    }
-    .menu-content div:not(:last-child) {
-      border-bottom: 1px solid #fffffe;
-    }
-    @keyframes slide-in {
-      from {
-        right: -200px;
-      }
-      to {
-        right: 0;
-      }
-    }
-    @keyframes slide-out {
-      from {
-        right: 0;
-      }
-      to {
-        right: -200px;
-      }
-    }
-    #timer {
-      font-size: 16px;
+    .center {
       text-align: center;
     }
-    h1 {
-      text-align: center;
-      margin-bottom: 0;
-    }
-    #article-count {
-      font-size: 16px;
-      text-align: center;
-      font-weight: bold;
+    .highlight {
+      background-color: yellow;
     }
   </style>
 </head>
 <body>
-  <h1>Web Scraper</h1>
-  <div id="timer">00:00:00</div>
-  <div id="article-count">記事数: 0</div>
-  <button class="hamburger-menu" onclick="toggleMenu()">☰</button>
-  <div class="menu-content" id="menu-content">
-    <div onclick="toggleDarkMode()">ダークモード/ライトモード</div>
-    <div onclick="toggleImages()">画像表示/非表示</div>
-    <div onclick="toggleDebug()">デバック</div>
+  <h1 class="title">goo News</h1>
+  <div class="center">
+    <span id="article-count">記事数: 0</span>
+    <span id="time-spent">00:00:00</span>
   </div>
-  <button class="scroll-button top-button" onclick="scrollToTop()">↑</button>
-  <button class="scroll-button bottom-button" onclick="scrollToBottom()">↓</button>
-  <button class="scroll-button scroll-down-button" onmousedown="startAutoScroll()" onmouseup="stopAutoScroll()">▽</button>
-  <button class="toggle-button" onclick="readAllArticles()">全記事を読み上げる</button>
-  <input type="range" min="0.5" max="2" value="1.4" step="0.1" onchange="changeAllSpeed(this.value)">
-  <div id="debug" class="debug"></div>
-  <div id="results"></div>
+  <div id="controls" class="center">
+    <button class="toggle-button" onclick="toggleMode()">Dark/Light</button>
+    <button class="button" onclick="readAllArticles()">記事全体の読み上げ</button>
+    <select id="speed-control" onchange="changeSpeed(this.value)">
+      <option value="0.75">0.75</option>
+      <option value="1.0">1.0</option>
+      <option value="1.5" selected>1.5</option>
+      <option value="2.0">2.0</option>
+    </select>
+    <select id="category-filter" onchange="filterArticles()">
+      <option value="all">ALL</option>
+    </select>
+  </div>
+  <div id="articles"></div>
+  <div class="scroll-button" id="scroll-bottom" onclick="scrollToBottom()">↓</div>
+  <div class="scroll-button" id="auto-scroll" onclick="toggleAutoScroll()">▽</div>
+  <div class="scroll-button" id="scroll-top" onclick="scrollToTop()">↑</div>
 
   <script>
     let darkMode = true;
-    let showImages = true;
-    let timerInterval;
-    let currentUtterance = null;
-    let allUtterance = null;
-    let allText = '';
-    let allIndex = 0;
-    let autoScrollInterval;
     let articleCount = 0;
+    let timeSpent = 0;
+    let interval;
+    let autoScrollInterval;
+    let autoScrollSpeed = 1;
+    let articles = [];
+    let categories = new Set();
+    let speechSynthesisUtterance;
+    let speechSynthesisUtterances = [];
+    let currentUtteranceIndex = 0;
+    let isReading = false;
+    let speechRate = 1.5;
 
-    function toggleDebug() {
-      const debug = document.getElementById('debug');
-      debug.style.display = debug.style.display === 'none' ? 'block' : 'none';
+    function toggleMode() {
+      darkMode = !darkMode;
+      document.body.className = darkMode ? 'dark-mode' : 'light-mode';
+    }
+
+    function changeSpeed(rate) {
+      speechRate = parseFloat(rate);
+    }
+
+    function readAllArticles() {
+      if (isReading) {
+        speechSynthesis.cancel();
+        isReading = false;
+      } else {
+        speechSynthesisUtterances = articles.map(article => {
+          const utterance = new SpeechSynthesisUtterance(`${article.title} ${article.date} ${article.content} 次の記事です`);
+          utterance.rate = speechRate;
+          utterance.onboundary = (event) => {
+            highlightText(event.charIndex, article);
+          };
+          utterance.onend = () => {
+            currentUtteranceIndex++;
+            if (currentUtteranceIndex < speechSynthesisUtterances.length) {
+              speechSynthesis.speak(speechSynthesisUtterances[currentUtteranceIndex]);
+            } else {
+              isReading = false;
+            }
+          };
+          return utterance;
+        });
+        currentUtteranceIndex = 0;
+        if (speechSynthesisUtterances.length > 0) {
+          speechSynthesis.speak(speechSynthesisUtterances[currentUtteranceIndex]);
+          isReading = true;
+        }
+      }
+    }
+
+    function highlightText(charIndex, article) {
+      const articlesContainer = document.getElementById('articles');
+      const articleElements = articlesContainer.getElementsByClassName('article');
+      for (let articleElement of articleElements) {
+        const titleElement = articleElement.querySelector('h2');
+        const dateElement = articleElement.querySelector('p:nth-of-type(1)');
+        const contentElement = articleElement.querySelector('p:nth-of-type(2)');
+        if (titleElement && titleElement.textContent === article.title) {
+          const text = titleElement.textContent + ' ' + dateElement.textContent + ' ' + contentElement.textContent;
+          const highlightedText = text.slice(0, charIndex) + '<span class="highlight">' + text.slice(charIndex, charIndex + 1) + '</span>' + text.slice(charIndex + 1);
+          titleElement.innerHTML = highlightedText.slice(0, article.title.length);
+          dateElement.innerHTML = highlightedText.slice(article.title.length + 1, article.title.length + 1 + article.date.length);
+          contentElement.innerHTML = highlightedText.slice(article.title.length + 1 + article.date.length + 1);
+        }
+      }
+    }
+
+    function updateTimeSpent() {
+      timeSpent++;
+      const hours = String(Math.floor(timeSpent / 3600)).padStart(2, '0');
+      const minutes = String(Math.floor((timeSpent % 3600) / 60)).padStart(2, '0');
+      const seconds = String(timeSpent % 60).padStart(2, '0');
+      document.getElementById('time-spent').textContent = `${hours}:${minutes}:${seconds}`;
+    }
+
+    async function fetchArticles() {
+      try {
+        const response = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://news.goo.ne.jp/latest'));
+        const data = await response.json();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(data.contents, 'text/html');
+        const articleLinks = doc.querySelectorAll('.gn-news-list.responsive-margin-bottom a');
+        for (let link of articleLinks) {
+          const url = 'https://news.goo.ne.jp' + link.getAttribute('href');
+          const articleResponse = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url));
+          const articleData = await articleResponse.json();
+          const articleDoc = parser.parseFromString(articleData.contents, 'text/html');
+          const title = articleDoc.querySelector('.article-title.margin-bottom15').textContent.trim();
+          const date = articleDoc.querySelector('.article-date.clearfix').textContent.trim();
+          const content = articleDoc.querySelector('.clearfix.article-text.cXenseParse').textContent.trim();
+          let imgSrc = articleDoc.querySelector('.article-thumbs img')?.getAttribute('src');
+          if (imgSrc && imgSrc.includes('https://news.goo.ne.jphttps')) {
+            imgSrc = imgSrc.replace('https://news.goo.ne.jphttps', 'https:');
+          }
+          const categoryMatch = url.match(/\/article\/([^\/]+)\//);
+          const category = categoryMatch ? categoryMatch[1] : 'other';
+          const article = { title, date, content, imgSrc, category };
+          articles.push(article);
+          categories.add(category);
+          displayArticle(article);
+          updateCategoryFilter();
+        }
+    } catch (error) {
+        console.error('Error fetching articles:', error);
+      }
+    }
+
+    function updateCategoryFilter() {
+      const categoryFilter = document.getElementById('category-filter');
+      categoryFilter.innerHTML = '<option value="all">ALL</option>';
+      categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+        categoryFilter.appendChild(option);
+      });
+    }
+
+    function displayArticle(article) {
+      const articlesContainer = document.getElementById('articles');
+      const articleElement = document.createElement('div');
+      articleElement.className = 'article';
+      articleElement.innerHTML = `
+        <h2>${article.title}</h2>
+        <button class="button" onclick="copyArticle('${article.title}', '${article.date}', '${article.content}')">コピー</button>
+        <button class="button" onclick="readArticle('${article.title}', '${article.date}', '${article.content}')">個別記事の読み上げ</button>
+        <p>${article.date}</p>
+        ${article.imgSrc ? `<img src="${article.imgSrc}" alt="Article Image">` : ''}
+        <p>${article.content}</p>
+      `;
+      articlesContainer.appendChild(articleElement);
+      updateArticleCount();
+    }
+
+    function filterArticles() {
+      const category = document.getElementById('category-filter').value;
+      const filteredArticles = category === 'all' ? articles : articles.filter(article => article.category === category);
+      const articlesContainer = document.getElementById('articles');
+      articlesContainer.innerHTML = '';
+      filteredArticles.forEach(article => displayArticle(article));
+      updateArticleCount(filteredArticles.length);
+    }
+
+    function updateArticleCount(count = articles.length) {
+      document.getElementById('article-count').textContent = `記事数: ${count}`;
+    }
+
+    function copyArticle(title, date, content) {
+      const text = `タイトル: ${title}\n日時: ${date}\n内容: ${content}`;
+      navigator.clipboard.writeText(text).then(() => {
+        alert('記事をコピーしました');
+      });
+    }
+
+    function readArticle(title, date, content) {
+      if (isReading) {
+        speechSynthesis.cancel();
+        isReading = false;
+      } else {
+        const utterance = new SpeechSynthesisUtterance(`${title} ${date} ${content}`);
+        utterance.rate = speechRate;
+        utterance.onboundary = (event) => {
+          highlightText(event.charIndex, title, date, content);
+        };
+        speechSynthesis.speak(utterance);
+        isReading = true;
+      }
+    }
+
+    function highlightText(charIndex, title, date, content) {
+      const articlesContainer = document.getElementById('articles');
+      const articleElements = articlesContainer.getElementsByClassName('article');
+      for (let articleElement of articleElements) {
+        const titleElement = articleElement.querySelector('h2');
+        const dateElement = articleElement.querySelector('p:nth-of-type(1)');
+        const contentElement = articleElement.querySelector('p:nth-of-type(2)');
+        if (titleElement && titleElement.textContent === title) {
+          const text = title + ' ' + date + ' ' + content;
+          const highlightedText = text.slice(0, charIndex) + '<span class="highlight">' + text.slice(charIndex, charIndex + 1) + '</span>' + text.slice(charIndex + 1);
+          titleElement.innerHTML = highlightedText.slice(0, title.length);
+          dateElement.innerHTML = highlightedText.slice(title.length + 1, title.length + 1 + date.length);
+          contentElement.innerHTML = highlightedText.slice(title.length + 1 + date.length + 1);
+        }
+      }
     }
 
     function scrollToTop() {
@@ -167,228 +309,22 @@
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }
 
-    function startAutoScroll() {
-      autoScrollInterval = setInterval(() => {
-        window.scrollBy(0, 1);
-      }, 10);
-    }
-
-    function stopAutoScroll() {
-      clearInterval(autoScrollInterval);
-    }
-
-    function toggleDarkMode() {
-      darkMode = !darkMode;
-      document.body.style.backgroundColor = darkMode ? '#0f0e17' : '#fef6e4';
-      document.body.style.color = darkMode ? '#a7a9be' : '#172c66';
-      document.querySelectorAll('.article h2').forEach(h2 => {
-        h2.style.color = darkMode ? '#fffffe' : '#001858';
-      });
-      document.querySelectorAll('.toggle-button, .scroll-button').forEach(button => {
-        button.style.backgroundColor = darkMode ? 'rgba(255, 137, 6, 0.5)' : 'rgba(245, 130, 174, 0.5)';
-        button.style.color = darkMode ? '#fffffe' : '#001858';
-      });
-      document.querySelector('.hamburger-menu').style.backgroundColor = darkMode ? '#ff8906' : '#f582ae';
-      document.querySelector('.hamburger-menu').style.color = darkMode ? '#fffffe' : '#001858';
-      document.querySelector('.menu-content').style.backgroundColor = darkMode ? '#ff8906' : '#f582ae';
-      document.querySelector('.menu-content').style.color = darkMode ? '#fffffe' : '#001858';
-    }
-
-    function toggleImages() {
-      showImages = !showImages;
-      document.querySelectorAll('.article img').forEach(img => {
-        img.style.display = showImages ? 'block' : 'none';
-      });
-    }
-
-    function toggleMenu() {
-      const menuContent = document.getElementById('menu-content');
-      if (menuContent.style.display === 'none' || menuContent.style.display === '') {
-        menuContent.style.display = 'block';
-        menuContent.style.animation = 'slide-in 0.3s forwards';
+    function toggleAutoScroll() {
+      if (autoScrollInterval) {
+        clearInterval(autoScrollInterval);
+        autoScrollInterval = null;
       } else {
-        menuContent.style.animation = 'slide-out 0.3s forwards';
-        setTimeout(() => {
-          menuContent.style.display = 'none';
-        }, 300);
+        autoScrollInterval = setInterval(() => {
+          window.scrollBy(0, autoScrollSpeed);
+        }, 50);
+        autoScrollSpeed = autoScrollSpeed === 1 ? 5 : 1;
       }
     }
 
-    async function fetchData() {
-      const results = [];
-      for (let page = 1; page <= 5; page++) {
-        const url = `https://news.goo.ne.jp/latest?page=${page}`;
-        let success = false;
-        for (let attempt = 0; attempt < 3; attempt++) {
-          try {
-            const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
-            const data = await response.json();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(data.contents, 'text/html');
-
-            doc.querySelectorAll('.gn-news-list.responsive-margin-bottom a').forEach(element => {
-              const link = element.getAttribute('href');
-              results.push(`https://news.goo.ne.jp${link}`);
-            });
-            success = true;
-            break;
-          } catch (error) {
-            console.error(`Attempt ${attempt + 1} failed: ${error}`);
-          }
-        }
-        if (!success) {
-          console.error(`Failed to fetch data from page ${page} after 3 attempts`);
-        }
-      }
-
-      for (let result of results) {
-        let success = false;
-        for (let attempt = 0; attempt < 3; attempt++) {
-          try {
-            const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(result)}`);
-            const data = await response.json();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(data.contents, 'text/html');
-
-            const title = doc.querySelector('.article-title.margin-bottom15')?.textContent || '';
-            let image = doc.querySelector('.article-thumbs img')?.getAttribute('src') || '';
-            const date = doc.querySelector('.article-date.clearfix')?.textContent || '';
-            const content = doc.querySelector('.clearfix.article-text.cXenseParse')?.textContent || '';
-
-            // 画像URLの置換
-            if (image) {
-              image = image.replace('https://news.goo.ne.jphttps', 'https:');
-            }
-
-            displayResult({ title, image, date, content });
-            success = true;
-            break;
-          } catch (error) {
-            console.error(`Attempt ${attempt + 1} failed: ${error}`);
-          }
-        }
-        if (!success) {
-          console.error(`Failed to fetch data from ${result} after 3 attempts`);
-        }
-      }
-    }
-
-    function displayResult(item) {
-      const resultsDiv = document.getElementById('results');
-      const debugDiv = document.getElementById('debug');
-      const articleCountDiv = document.getElementById('article-count');
-
-      const articleDiv = document.createElement('div');
-      articleDiv.classList.add('article');
-      articleDiv.innerHTML = `
-        <h2>${item.title}</h2>
-        <p>${item.date}</p>
-        <button onclick="copyText('${item.title}', '${item.date}', '${item.content}')">コピー</button>
-        <button onclick="readArticle('${item.title}', '${item.date}', '${item.content}', this)">読み上げ</button>
-        ${item.image ? `<img src="${item.image}" alt="Image">` : ''}
-        <p>${item.content}</p>
-      `;
-      resultsDiv.appendChild(articleDiv);
-
-      // Update article count
-      articleCount++;
-      articleCountDiv.textContent = `記事数: ${articleCount}`;
-
-      // Debug information
-      debugDiv.innerHTML += `<p>Processed: ${item.title}</p>`;
-    }
-
-    function copyText(title, date, content) {
-      const text = `${title}\n${date}\n${content}`;
-      navigator.clipboard.writeText(text).then(() => {
-        alert('コピーしました');
-      });
-    }
-
-    function readArticle(title, date, content, button) {
-      const text = `${title}\n${date}\n${content}`;
-      if (currentUtterance && speechSynthesis.speaking) {
-        speechSynthesis.pause();
-        button.textContent = '再開';
-      } else if (currentUtterance && speechSynthesis.paused) {
-        speechSynthesis.resume();
-        button.textContent = '一時停止';
-      } else {
-        currentUtterance = new SpeechSynthesisUtterance(text);
-        currentUtterance.rate = 1.4;
-        speechSynthesis.speak(currentUtterance);
-        button.textContent = '一時停止';
-      }
-    }
-
-    function changeSpeed(speed) {
-      if (currentUtterance) {
-        currentUtterance.rate = speed;
-        speechSynthesis.cancel();
-        speechSynthesis.speak(currentUtterance);
-      }
-    }
-
-    function readAllArticles() {
-      const articles = document.querySelectorAll('.article');
-      allText = '';
-      articles.forEach(article => {
-        const title = article.querySelector('h2').textContent;
-        const date = article.querySelector('p').textContent;
-        const content = article.querySelector('p:last-of-type').textContent;
-        allText += `${title}\n${date}\n${content}\n`;
-      });
-      toggleReadAllArticles();
-    }
-
-    function toggleReadAllArticles() {
-      if (allUtterance && speechSynthesis.speaking) {
-        speechSynthesis.pause();
-        document.querySelector('button[onclick="readAllArticles()"]').textContent = '再開';
-      } else if (allUtterance && speechSynthesis.paused) {
-        speechSynthesis.resume();
-        document.querySelector('button[onclick="readAllArticles()"]').textContent = '一時停止';
-      } else {
-        allUtterance = new SpeechSynthesisUtterance(allText);
-        allUtterance.rate = 1.4;
-        speechSynthesis.speak(allUtterance);
-        document.querySelector('button[onclick="readAllArticles()"]').textContent = '一時停止';
-      }
-    }
-
-    function changeAllSpeed(speed) {
-      if (allUtterance) {
-        allUtterance.rate = speed;
-        speechSynthesis.cancel();
-        speechSynthesis.speak(allUtterance);
-      }
-    }
-
-    function startTimer() {
-      const timer = document.getElementById('timer');
-      let seconds = 0;
-      let minutes = 0;
-      let hours = 0;
-
-      timerInterval = setInterval(() => {
-        seconds++;
-        if (seconds === 60) {
-          seconds = 0;
-          minutes++;
-        }
-        if (minutes === 60) {
-          minutes = 0;
-          hours++;
-        }
-
-        timer.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-      }, 1000);
-    }
-
-    window.onload = () => {
-      fetchData();
-      startTimer();
-    };
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchArticles();
+      interval = setInterval(updateTimeSpent, 1000);
+    });
   </script>
 </body>
 </html>
