@@ -191,34 +191,36 @@
     }
 
     async function fetchArticles() {
-      try {
-        const response = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://news.goo.ne.jp/latest'));
-        const data = await response.json();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(data.contents, 'text/html');
-        const articleLinks = doc.querySelectorAll('.gn-news-list.responsive-margin-bottom a');
-        for (let link of articleLinks) {
-          const url = 'https://news.goo.ne.jp' + link.getAttribute('href');
-          const articleResponse = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url));
-          const articleData = await articleResponse.json();
-          const articleDoc = parser.parseFromString(articleData.contents, 'text/html');
-          const title = articleDoc.querySelector('.article-title.margin-bottom15').textContent.trim();
-          const date = articleDoc.querySelector('.article-date.clearfix').textContent.trim();
-          const content = articleDoc.querySelector('.clearfix.article-text.cXenseParse').textContent.trim();
-          let imgSrc = articleDoc.querySelector('.article-thumbs img')?.getAttribute('src');
-          if (imgSrc && imgSrc.includes('https://news.goo.ne.jphttps')) {
-            imgSrc = imgSrc.replace('https://news.goo.ne.jphttps', 'https:');
+      for (let page = 1; page <= 10; page++) {
+        try {
+          const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(`https://news.goo.ne.jp/latest?page=${page}`)}`);
+          const data = await response.json();
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(data.contents, 'text/html');
+          const articleLinks = doc.querySelectorAll('.gn-news-list.responsive-margin-bottom a');
+          for (let link of articleLinks) {
+            const url = 'https://news.goo.ne.jp' + link.getAttribute('href');
+            const articleResponse = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+            const articleData = await articleResponse.json();
+            const articleDoc = parser.parseFromString(articleData.contents, 'text/html');
+            const title = articleDoc.querySelector('.article-title.margin-bottom15').textContent.trim();
+            const date = articleDoc.querySelector('.article-date.clearfix').textContent.trim();
+            const content = articleDoc.querySelector('.clearfix.article-text.cXenseParse').textContent.trim();
+            let imgSrc = articleDoc.querySelector('.article-thumbs img')?.getAttribute('src');
+            if (imgSrc && imgSrc.includes('https://news.goo.ne.jphttps')) {
+              imgSrc = imgSrc.replace('https://news.goo.ne.jphttps', 'https:');
+            }
+            const categoryMatch = url.match(/\/article\/([^\/]+)\//);
+            const category = categoryMatch ? categoryMatch[1] : 'other';
+            const article = { title, date, content, imgSrc, category };
+            articles.push(article);
+            categories.add(category);
+            displayArticle(article);
+            updateCategoryFilter();
           }
-          const categoryMatch = url.match(/\/article\/([^\/]+)\//);
-          const category = categoryMatch ? categoryMatch[1] : 'other';
-          const article = { title, date, content, imgSrc, category };
-          articles.push(article);
-          categories.add(category);
-          displayArticle(article);
-          updateCategoryFilter();
+        } catch (error) {
+          console.error(`Error fetching articles from page ${page}:`, error);
         }
-    } catch (error) {
-        console.error('Error fetching articles:', error);
       }
     }
 
